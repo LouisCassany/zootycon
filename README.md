@@ -1,15 +1,3 @@
-Here are the revised and expanded rules for **Conservatory Blueprint**.
-
-Changes implemented:
-*   **Landscape:** Now includes Grass 🌾 as a drawable symbol.
-*   **Kiosks:** Must be built **outside** enclosures (acting as obstacles/pathways).
-*   **Fences:** Explicitly allows shared walls.
-*   **Scaling:** Added a "Neutral Partner" rule for 2–3 players.
-*   **Asymmetry:** Added 6 Director Profile cards.
-*   **Scoring:** Updated penalties (Unused Landscape / Orphan Fences).
-
-***
-
 # 🦁 Conservatory Blueprint
 **Version 2.0**
 
