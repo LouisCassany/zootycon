@@ -95,24 +95,24 @@ To place an animal, you need a closed loop of fences. Inside that loop, you must
 ### The Savannah Zone
 | Animal | Size Needed | Terrain Requirements | Code | Appeal (VP) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Meerkat** | 2 Sq | 1 Rock 🪨 | M | 3 |
 | **Zebra** | 4 Sq | 2 Grass 🌾 | Z | 5 |
+| **Giraffe** | 5 Sq | 2 Grass 🌾, 1 Tree 🌲 | G | 7 |
 | **Lion** | 6 Sq | 2 Rock 🪨, 1 Water 💧 | L | 8 |
-| **Elephant**| 8 Sq | 3 Water 💧, 2 Tree 🌲 | E | 12 |
+| **Elephant** | 8 Sq | 3 Water 💧, 2 Tree 🌲 | E | 12 |
 
 ### The Wetland Zone
 | Animal | Size Needed | Terrain Requirements | Code | Appeal (VP) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Flamingo**| 3 Sq | 1 Water 💧 | F | 4 |
-| **Croc** | 5 Sq | 3 Water 💧, 1 Rock 🪨 | C | 7 |
-| **Hippo** | 6 Sq | 4 Water 💧 | H | 9 |
+| **Flamingo** | 3 Sq | 1 Water 💧 | F | 4 |
+| **Crocodile**| 5 Sq | 3 Water 💧, 1 Rock 🪨 | C | 7 |
+| **Dolphin** | 7 Sq | 5 Water 💧 (Must be on map edge)| D | 10 |
 
-### The Alpine Zone
+### The Alpine & Exotic Zone
 | Animal | Size Needed | Terrain Requirements | Code | Appeal (VP) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Goat** | 3 Sq | 2 Rock 🪨 | G | 4 |
+| **Penguin** | 2 Sq | 1 Rock 🪨, 1 Water 💧 | N | 4 |
+| **Monkey** | 3 Sq | 2 Tree 🌲 | M | 5 |
 | **Panda** | 4 Sq | 3 Tree 🌲 | P | 8 |
-| **Eagle** | 2 Sq | 1 Rock 🪨 (Must be on map edge)| A | 5 |
 
 ---
 
