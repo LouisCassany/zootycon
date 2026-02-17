@@ -23,36 +23,20 @@ func main() {
 	// 1. Define Flags
 	inputPtr := flag.String("i", "", "Input image path (Required)")
 	outputPtr := flag.String("o", "", "Output folder path (Required)")
-	sizePtr := flag.String("s", "", "Target size 'WIDTHxHEIGHT' (e.g. 64x64)")
+	sizePtr := flag.String("s", "", "Target size 'WIDTHxHEIGHT' (e.g. 300x300)")
 	tolerancePtr := flag.Int("t", 20, "Background color tolerance (0-255)")
 	minPtr := flag.Int("m", 10, "Minimum pixel size for icons")
+	singlePtr := flag.Bool("single", false, "Process as a single image (skip splitting into multiple icons)")
 
-	// 2. Customize the Help Menu
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Icon pack - A tool to split and clean sprite sheets\n\n")
-		fmt.Fprintf(os.Stderr, "USAGE:\n")
-		fmt.Fprintf(os.Stderr, "  iconpack -i <input> -o <output_dir> [options]\n\n")
-		fmt.Fprintf(os.Stderr, "OPTIONS:\n")
+		fmt.Fprintf(os.Stderr, "Icon pack - Sprite Sheet Extractor\n\n")
+		fmt.Fprintf(os.Stderr, "USAGE:\n  iconpack -i sheet.png -o ./out -s 300x300\n")
+		fmt.Fprintf(os.Stderr, "  iconpack -i icon.png -o ./out -s 512x512 -single\n\n")
 		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "\nDETAILED TIPS:\n")
-		fmt.Fprintf(os.Stderr, "  -t (Tolerance):\n")
-		fmt.Fprintf(os.Stderr, "     Higher values (30-50) are better for JPEGs with 'fuzzy' white backgrounds.\n")
-		fmt.Fprintf(os.Stderr, "     Lower values (5-10) are better for clean, pixel-perfect PNGs.\n\n")
-		fmt.Fprintf(os.Stderr, "  -m (Min Size) - THE NOISE FILTER:\n")
-		fmt.Fprintf(os.Stderr, "     This flag prevents the tool from saving tiny 'garbage' files.\n")
-		fmt.Fprintf(os.Stderr, "     • Use -m 15: If you are getting tiny specks or dots saved as files.\n")
-		fmt.Fprintf(os.Stderr, "     • Use -m 2:  If you have very small, thin icons that are being skipped.\n")
-		fmt.Fprintf(os.Stderr, "     • Tip: Usually, setting this to 10-20%% of your expected icon size is ideal.\n\n")
-		fmt.Fprintf(os.Stderr, "EXAMPLES:\n")
-		fmt.Fprintf(os.Stderr, "  # Basic split and crop:\n")
-		fmt.Fprintf(os.Stderr, "  iconpack -i sheet.png -o ./out\n\n")
-		fmt.Fprintf(os.Stderr, "  # Split and resize icons to 64x64 squares, ignoring noise under 20px:\n")
-		fmt.Fprintf(os.Stderr, "  iconpack -i sheet.jpg -o ./out -s 64x64 -m 20 -t 40\n")
 	}
 
 	flag.Parse()
 
-	// 3. Validation
 	if *inputPtr == "" || *outputPtr == "" {
 		flag.Usage()
 		return
@@ -79,14 +63,31 @@ func main() {
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.Draw(img, img.Bounds(), src, bounds.Min, draw.Src)
 
-	fmt.Println("Processing background...")
+	fmt.Println("Step 1: Removing background...")
 	floodFillAlpha(img, *tolerancePtr)
 
-	fmt.Println("Splitting icons...")
+	os.MkdirAll(*outputPtr, 0755)
+
+	// --- SINGLE IMAGE MODE ---
+	if *singlePtr {
+		fmt.Println("Step 2: Processing as single image...")
+		finalImg := image.Image(tightCrop(img))
+
+		if *sizePtr != "" {
+			tw, th := parseSize(*sizePtr)
+			finalImg = resizeAndCenter(finalImg.(*image.RGBA), tw, th)
+		}
+
+		outName := "output_single.png"
+		saveImage(filepath.Join(*outputPtr, outName), finalImg)
+		fmt.Printf("Finished! Saved single image to '%s'\n", *outputPtr)
+		return
+	}
+
+	// --- SPRITE SHEET SPLITTING MODE ---
+	fmt.Println("Step 2: Splitting and cropping icons...")
 	visited := make([]bool, w*h)
 	iconCount := 0
-
-	os.MkdirAll(*outputPtr, 0755)
 
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
@@ -104,31 +105,35 @@ func main() {
 					continue
 				}
 
-				// Crop the icon
-				iconImg := image.NewRGBA(image.Rect(0, 0, iconW, iconH))
+				// Initial crop of the island
+				tempImg := image.NewRGBA(image.Rect(0, 0, iconW, iconH))
 				for _, p := range points {
-					iconImg.Set(p.X-minP.X, p.Y-minP.Y, img.At(p.X, p.Y))
+					tempImg.Set(p.X-minP.X, p.Y-minP.Y, img.At(p.X, p.Y))
 				}
 
-				var finalImg image.Image = iconImg
+				// TIGHT CROP: Remove any empty space around the island
+				tightImg := tightCrop(tempImg)
+
+				var finalImg image.Image = tightImg
 
 				// Resize and Center if requested
 				if *sizePtr != "" {
 					tw, th := parseSize(*sizePtr)
-					finalImg = resizeAndCenter(iconImg, tw, th)
+					finalImg = resizeAndCenter(tightImg, tw, th)
 				}
 
 				// Save
 				outName := fmt.Sprintf("icon_%03d.png", iconCount)
 				saveImage(filepath.Join(*outputPtr, outName), finalImg)
-				fmt.Printf("  Saved %s (%dx%d)\n", outName, iconW, iconH)
+				fmt.Printf("  Saved %s (%dx%d raw)\n", outName, tightImg.Bounds().Dx(), tightImg.Bounds().Dy())
 				iconCount++
 			}
 		}
 	}
-	fmt.Printf("Finished! Extracted %d icons.\n", iconCount)
+	fmt.Printf("\nFinished! Extracted %d icons to '%s'\n", iconCount, *outputPtr)
 }
 
+// floodFillAlpha turns the background (starting at 0,0) transparent
 func floodFillAlpha(img *image.RGBA, tolerance int) {
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -158,6 +163,7 @@ func floodFillAlpha(img *image.RGBA, tolerance int) {
 	}
 }
 
+// findIsland groups connected non-transparent pixels
 func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Point, Point, Point) {
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -174,7 +180,6 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 		queue = queue[1:]
 		points = append(points, p)
 
-		// Corrected boundary tracking logic
 		if p.X < minP.X {
 			minP.X = p.X
 		}
@@ -188,7 +193,6 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 			maxP.Y = p.Y
 		}
 
-		// Check 8-way neighbors (including diagonals) to keep icons connected
 		for dy := -1; dy <= 1; dy++ {
 			for dx := -1; dx <= 1; dx++ {
 				if dx == 0 && dy == 0 {
@@ -198,7 +202,8 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 				if nx >= 0 && nx < w && ny >= 0 && ny < h {
 					idx := ny*w + nx
 					_, _, _, a := img.At(nx, ny).RGBA()
-					if a > 0 && !globalVisited[idx] {
+					// Ignore pixels that are essentially transparent (noise)
+					if a > 1000 && !globalVisited[idx] {
 						globalVisited[idx] = true
 						queue = append(queue, Point{nx, ny})
 					}
@@ -209,21 +214,65 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 	return points, minP, maxP
 }
 
+// tightCrop trims fully transparent borders to maximize the icon size
+func tightCrop(img *image.RGBA) *image.RGBA {
+	bounds := img.Bounds()
+	minX, minY, maxX, maxY := bounds.Max.X, bounds.Max.Y, bounds.Min.X, bounds.Min.Y
+
+	hasPixels := false
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			_, _, _, a := img.At(x, y).RGBA()
+			if a > 0 {
+				hasPixels = true
+				if x < minX {
+					minX = x
+				}
+				if x > maxX {
+					maxX = x
+				}
+				if y < minY {
+					minY = y
+				}
+				if y > maxY {
+					maxY = y
+				}
+			}
+		}
+	}
+
+	if !hasPixels {
+		return img
+	}
+
+	rect := image.Rect(minX, minY, maxX+1, maxY+1)
+	sub := img.SubImage(rect).(*image.RGBA)
+
+	// Normalize to 0,0
+	out := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
+	draw.Draw(out, out.Bounds(), sub, rect.Min, draw.Src)
+	return out
+}
+
+// resizeAndCenter scales the icon to fit the box without stretching
 func resizeAndCenter(src *image.RGBA, tw, th int) image.Image {
-	// Fit maintaining aspect ratio
+	// Fit maintaining aspect ratio (the icon will touch the edges of the box on at least 2 sides)
 	resized := imaging.Fit(src, tw, th, imaging.Lanczos)
 
+	// Create the final canvas
 	dst := image.NewRGBA(image.Rect(0, 0, tw, th))
 
+	// Calculate center position
 	bx := resized.Bounds()
-	pos := image.Pt((tw-bx.Dx())/2, (th-bx.Dy())/2)
+	startX := (tw - bx.Dx()) / 2
+	startY := (th - bx.Dy()) / 2
 
-	draw.Draw(dst, image.Rectangle{pos, pos.Add(bx.Size())}, resized, image.Point{}, draw.Over)
+	// Draw the resized image onto the center of the transparent canvas
+	draw.Draw(dst, image.Rect(startX, startY, startX+bx.Dx(), startY+bx.Dy()), resized, image.Point{0, 0}, draw.Src)
 	return dst
 }
 
 func colorDist(r1, g1, b1, r2, g2, b2 uint32) float64 {
-	// Convert 0-65535 to 0-255
 	dr := float64(r1>>8) - float64(r2>>8)
 	dg := float64(g1>>8) - float64(g2>>8)
 	db := float64(b1>>8) - float64(b2>>8)

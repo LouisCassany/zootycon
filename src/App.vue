@@ -1,184 +1,154 @@
 <template>
-  <!-- Main Print Sheet (A4 Landscape) -->
-  <div class="w-[297mm] h-[210mm] bg-slate-50 p-6 flex flex-col gap-4 relative m-4 print:m-0">
+  <!-- Main Sheet: A4 Landscape -->
+  <div
+    class="w-[297mm] h-[210mm] p-6 flex flex-col gap-4 m-4 print:m-0 font-sans bg-emerald-50 shadow-2xl rounded-3xl overflow-hidden border-8 border-white">
 
-    <!-- Blueprint Header -->
-    <div class=" flex justify-between items-end border-b-2 border-slate-300 pb-2">
-      <div>
-        <h1 class="text-4xl font-black tracking-tighter text-slate-900">CONSERVATORY BLUEPRINT</h1>
-        <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Zoo Director Master Plan // Version 2.0
-        </p>
-      </div>
-      <div class="flex gap-4">
-        <div class="border-2 border-slate-800 px-4 py-1">
-          <span class="text-[10px] block font-bold leading-none">DIRECTOR NAME</span>
-          <div class="h-6 w-32"></div>
-        </div>
-        <div class="border-2 border-slate-800 px-4 py-1 bg-slate-800 text-white">
-          <span class="text-[10px] block font-bold leading-none">PROFILE</span>
-          <div class="h-6 w-32"></div>
-        </div>
-      </div>
-    </div>
+    <!-- SECTION HAUTE -->
+    <div class="flex justify-between gap-6 h-[135mm]">
 
-    <div class="flex flex-1 gap-6">
-      <!-- LEFT COLUMN: Animal Registry -->
-      <div class="w-1/3 flex flex-col gap-3">
-        <h2 class="bg-slate-800 text-white text-xs font-bold px-2 py-1">PAW-PRINT REGISTRY (POPULATE)</h2>
-
-        <div v-for="category in animals" :key="category.name" class="border border-slate-300 rounded overflow-hidden">
-          <div class="bg-slate-200 px-2 py-0.5 flex justify-between items-center">
-            <span class="text-xs font-bold uppercase">{{ category.icon }} {{ category.name }}</span>
-          </div>
-
-          <table class="w-full text-left text-[10px]">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500">
+      <!-- COLONNE GAUCHE: Registre -->
+      <div class="w-[10.5cm] flex flex-col">
+        <h2
+          class="bg-indigo-800 text-white text-sm font-black px-4 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
+          <span class="text-lg">🐾</span> Registre des Empreintes
+        </h2>
+        <!-- Added overflow-hidden here to fix the bottom corner border issue -->
+        <div class="border-2 border-indigo-900 rounded-b-xl bg-white shadow-lg overflow-hidden">
+          <table class="w-full text-left text-[11px] border-collapse">
+            <thead class="bg-indigo-50 border-b-2 border-indigo-200 text-indigo-900">
               <tr>
-                <th class="px-2 py-1">NAME</th>
-                <th class="px-1 text-center">SQ</th>
-                <th class="px-1">NEEDS</th>
-                <th class="px-1 text-center font-bold text-slate-800">VP</th>
-                <th class="px-1 text-center">DONE</th>
+                <th class="px-3 py-2 font-black uppercase">Animal</th>
+                <th class="px-1 text-center font-black">Taille</th>
+                <th class="px-1 font-black text-center">Besoins</th>
+                <th class="px-1 text-center font-black bg-rose-600 text-white w-10">PV</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="a in category.list" :key="a.code"
-                class="border-b border-slate-100 last:border-0 hover:bg-white">
-                <td class="px-2 py-1 font-bold">({{ a.code }}) {{ a.name }}</td>
-                <td class="text-center font-mono">{{ a.size }}</td>
-                <td class="text-[12px] leading-none">{{ a.reqs.join('') }}</td>
-                <td class="text-center font-black">{{ a.vp }}</td>
-                <td class="text-center">
-                  <div class="w-4 h-4 border border-slate-400 rounded-full mx-auto bg-white/50"></div>
+              <tr v-for="(a, idx) in animals" :key="a.code"
+                :class="['border-b border-indigo-100 last:border-0', idx % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30']">
+                <td class="px-3 py-1.5 font-bold text-indigo-950 flex items-center gap-2">
+                  <span
+                    class="w-5 h-5 bg-indigo-900 text-white flex items-center justify-center rounded-md text-[9px] font-black italic">{{
+                      a.code }}</span>
+                  {{ a.name }}
                 </td>
+                <td class="text-center font-black text-indigo-600 text-xs">{{ a.size }}</td>
+                <td class="px-1 text-center">
+                  <div class="flex gap-0.5 justify-center">
+                    <GameSymbol v-for="(req, i) in a.reqs" :key="i" :name="req" size="w-6 h-6" class="drop-shadow-sm" />
+                  </div>
+                </td>
+                <td class="text-center font-black text-sm text-rose-600 bg-rose-50 border-l border-rose-100">{{
+                  a.vp
+                  }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <!-- Director Profile Reference (Small) -->
-        <div class="mt-auto border-t-2 border-dashed border-slate-300 pt-2">
-          <h3 class="text-[9px] font-bold text-slate-400 mb-1 uppercase">Director Quick-Ref</h3>
-          <div class="grid grid-cols-2 gap-1 text-[8px] leading-tight text-slate-500">
-            <div><strong>Architect:</strong> +2 Fences (L)</div>
-            <div><strong>Botanist:</strong> +1 Terrain (L)</div>
-            <div><strong>Vet:</strong> Ignore 1 Symbol</div>
-            <div><strong>Marketer:</strong> Kiosk = 1 Appeal</div>
-          </div>
-        </div>
       </div>
 
-      <!-- CENTER COLUMN: Zoning Grid -->
-      <div class="flex-1 flex flex-col items-center">
-        <div class="mb-2 flex justify-between w-full items-center">
-          <span class="text-[10px] font-bold text-slate-400 uppercase">Zoning Grid (10x10)</span>
-          <div class="flex gap-2">
-            <span class="text-[10px] px-2 py-0.5 bg-slate-100 border border-slate-300">🌲 Tree</span>
-            <span class="text-[10px] px-2 py-0.5 bg-slate-100 border border-slate-300">🪨 Rock</span>
-            <span class="text-[10px] px-2 py-0.5 bg-slate-100 border border-slate-300">💧 Water</span>
-            <span class="text-[10px] px-2 py-0.5 bg-slate-100 border border-slate-300">🌾 Grass</span>
-          </div>
-        </div>
+      <!-- COLONNE DROITE : Grille de Zonage -->
+      <div class="w-[12cm] flex flex-col">
+        <h2
+          class="bg-emerald-700 text-white text-sm font-black px-4 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
+          <span class="text-lg">🗺️</span> Carte du Sanctuaire
+        </h2>
 
-        <!-- The Dot Grid -->
-        <div class="grid grid-cols-10 grid-rows-10 border">
-          <div v-for="i in 100" :key="i"
-            class="w-10 h-10 border border-black relative group flex items-center justify-center">
-          </div>
-        </div>
-
-        <!-- Scoring Legend -->
-        <div class="mt-4 w-full grid grid-cols-3 gap-2 text-[9px] border border-slate-200 p-2 bg-slate-50 rounded">
-          <div><strong>(+) GAIN:</strong> Animal VP + 2 per Kiosk + 1 per 3 Coins</div>
-          <div class="border-x border-slate-200 px-2 text-red-700"><strong>(-) LOSS:</strong> -1 per Terrain outside
-            cage</div>
-          <div class="text-red-700"><strong>(-) LOSS:</strong> -1 per Orphan (open) Fence</div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: Warehouse & Tracks -->
-      <div class="w-16 flex flex-col gap-4 items-center">
-        <!-- Coin Track -->
-        <div class="flex-1 flex flex-col items-center">
-          <span
-            class="text-[9px] font-black uppercase text-amber-600 rotate-90 h-12 w-12 flex items-center justify-center">Coins</span>
-          <div class="flex flex-col-reverse border-2 border-amber-500 rounded bg-white overflow-hidden">
-            <div v-for="n in 20" :key="n"
-              class="w-10 h-6 border-b border-amber-100 flex items-center justify-center text-[10px] font-bold">
-              {{ n }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="w-12 flex flex-col gap-4 items-center">
-        <!-- Appeal Track -->
-        <div class="flex-1 flex flex-col items-center">
-          <span
-            class="text-[9px] font-black uppercase text-blue-600 rotate-90 h-12 w-12 flex items-center justify-center">Appeal</span>
-          <div class="flex flex-col-reverse border-2 border-blue-500 rounded bg-white overflow-hidden">
-            <div v-for="n in 50" :key="n"
-              :class="['w-8 h-[9.3px] border-b border-blue-100 flex items-center justify-center text-[7px] font-bold', n % 5 === 0 ? 'bg-blue-50' : '']">
-              {{ n }}
-            </div>
+        <div
+          class="grid grid-cols-10 grid-rows-10 border-4 border-emerald-900 bg-white h-full aspect-square shadow-inner rounded-b-xl">
+          <div v-for="i in 100" :key="i" class="border border-emerald-100/50 relative flex items-center justify-center">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Footer Action Reference -->
-    <div class="grid grid-cols-4 gap-4 mt-2">
-      <div v-for="act in actions" :key="act.title" class="border border-slate-300 p-2 bg-white/50 rounded">
-        <h4 class="text-[10px] font-black uppercase border-b border-slate-300 mb-1">{{ act.title }}</h4>
-        <p class="text-[8px] leading-tight text-slate-600"><strong>Leader:</strong> {{ act.lead }}</p>
-        <p class="text-[8px] leading-tight text-slate-600"><strong>Follow:</strong> {{ act.follow }}</p>
+    <!-- SECTION BASSE: Trackers -->
+    <div class="flex-1 flex flex-col">
+      <div
+        class="border-2 border-slate-900 rounded-2xl bg-white shadow-lg p-3 px-6 flex flex-col justify-around flex-1">
+
+        <!-- Track 1: Gold -->
+        <div class="flex items-center gap-4">
+          <div class="w-24 text-right">
+            <span class="text-[11px] font-black uppercase text-amber-700 block leading-none">Trésorerie</span>
+            <span class="text-[8px] font-bold text-amber-400 uppercase tracking-widest italic">Pièces d'or</span>
+          </div>
+          <div class="flex flex-1 border-2 border-amber-500 rounded-lg bg-white overflow-hidden h-9 shadow-inner">
+            <div v-for="n in 20" :key="n"
+              :class="['flex-1 border-r border-amber-100 flex items-center justify-center text-xs font-black last:border-r-0', n % 5 === 0 ? 'bg-amber-500 text-white' : 'text-amber-900']">
+              {{ n }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Track 2: Reputation -->
+        <div class="flex items-center gap-4">
+          <div class="w-24 text-right">
+            <span class="text-[11px] font-black uppercase text-sky-700 block leading-none">Réputation</span>
+            <span class="text-[8px] font-bold text-sky-400 uppercase tracking-widest italic">Attrait</span>
+          </div>
+          <div class="flex flex-1 flex-col border-2 border-sky-500 rounded-lg bg-white overflow-hidden shadow-inner">
+            <div class="flex border-b border-sky-100">
+              <div v-for="n in 25" :key="n"
+                :class="['flex-1 h-5 border-r border-sky-50 flex items-center justify-center text-[10px] font-black last:border-r-0', n % 5 === 0 ? 'bg-sky-600 text-white' : 'text-sky-900']">
+                {{ n }}
+              </div>
+            </div>
+            <div class="flex">
+              <div v-for="n in 25" :key="n + 25"
+                :class="['flex-1 h-5 border-r border-sky-50 flex items-center justify-center text-[10px] font-black last:border-r-0', (n + 25) % 5 === 0 ? 'bg-sky-600 text-white' : 'text-sky-900']">
+                {{ n + 25 }}
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-const actions = [
-  { title: "1. Build", lead: "5 Fences + 1 Kiosk", follow: "3 Fences" },
-  { title: "2. Landscape", lead: "3 Terrain Symbols", follow: "1 Terrain Symbol" },
-  { title: "3. Populate", lead: "Place + Gain 3 Coins", follow: "Place (Cost 2 Coins)" },
-  { title: "4. Sponsor", lead: "5 Coins + 1 Appeal", follow: "2 Coins" },
-]
+import GameSymbol from './components/GameSymbol.vue';
 
 const animals = [
-  {
-    name: "Savannah",
-    icon: "🌾",
-    list: [
-      { name: "Zebra", code: "Z", size: 4, reqs: ["🌾", "🌾"], vp: 5 },
-      { name: "Giraffe", code: "G", size: 5, reqs: ["🌾", "🌾", "🌲"], vp: 7 },
-      { name: "Lion", code: "L", size: 6, reqs: ["🪨", "🪨", "💧"], vp: 8 },
-      { name: "Elephant", code: "E", size: 8, reqs: ["💧", "💧", "🌲", "🌲"], vp: 12 },
-    ]
-  },
-  {
-    name: "Wetland",
-    icon: "💧",
-    list: [
-      { name: "Flamingo", code: "F", size: 3, reqs: ["💧"], vp: 4 },
-      { name: "Crocodile", code: "C", size: 5, reqs: ["💧", "💧", "🪨"], vp: 7 },
-      { name: "Dolphin", code: "D", size: 7, reqs: ["💧", "💧", "💧"], vp: 10 },
-    ]
-  },
-  {
-    name: "Alpine / Exotic",
-    icon: "🏔️",
-    list: [
-      { name: "Penguin", code: "N", size: 2, reqs: ["🪨", "💧"], vp: 4 },
-      { name: "Monkey", code: "M", size: 3, reqs: ["🌲", "🌲"], vp: 5 },
-      { name: "Panda", code: "P", size: 4, reqs: ["🌲", "🌲", "🌲"], vp: 8 },
-    ]
-  }
+  { name: "Zèbre", code: "Z", size: 4, reqs: ["grass", "grass"], vp: 5 },
+  { name: "Girafe", code: "G", size: 5, reqs: ["grass", "grass", "tree"], vp: 7 },
+  { name: "Lion", code: "L", size: 6, reqs: ["rock", "rock", "water"], vp: 8 },
+  { name: "Éléphant", code: "E", size: 8, reqs: ["water", "water", "water", "tree", "tree"], vp: 12 },
+  { name: "Flamant", code: "F", size: 3, reqs: ["water"], vp: 4 },
+  { name: "Crocodile", code: "C", size: 5, reqs: ["water", "water", "water", "rock"], vp: 7 },
+  { name: "Dauphin", code: "D", size: 7, reqs: ["water", "water", "water", "water", "water"], vp: 10 },
+  { name: "Pingouin", code: "N", size: 2, reqs: ["rock", "water"], vp: 4 },
+  { name: "Singe", code: "M", size: 3, reqs: ["tree", "tree"], vp: 5 },
+  { name: "Panda", code: "P", size: 4, reqs: ["tree", "tree", "tree"], vp: 8 },
 ]
 </script>
 
 <style>
 body {
-  background: black
+  background: #064e3b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .shadow-2xl,
+  .shadow-lg,
+  .shadow-inner,
+  .shadow-md {
+    box-shadow: none !important;
+  }
+
+  .m-4 {
+    margin: 0 !important;
+  }
 }
 </style>

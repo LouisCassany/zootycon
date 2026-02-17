@@ -36,10 +36,9 @@ Every round, players secretly choose **1 Card** and reveal simultaneously.
 *   **If no one chose it:** See "The Neutral Partner" rule below.
 
 ### 1. 🚧 BUILD (Infrastructure)
-*   **Leader:** Draw **5 Fence Lines** (connect dots) AND place **1 Kiosk**.
+*   **Leader:** Draw **5 Fence Lines** (connect dots).
 *   **Follower:** Draw **3 Fence Lines**.
     *   **Fencing Rules:** You may connect dots in any direction (orthogonal). You **may** share fence lines between two adjacent enclosures (a single line acts as a wall for both).
-    *   **Kiosk Rules:** Kiosks (Burger stand, Toilet, Gift Shop) fill 1 Square. They **MUST** be placed **OUTSIDE** of enclosures. They cannot be placed inside a finished cage.
 
 ### 2. 🚜 LANDSCAPE (Terrain)
 *   **Leader:** Draw **3 Terrain Symbols** in empty squares.
@@ -78,8 +77,6 @@ In low-player games, not enough actions trigger naturally.
 
 To place an animal, you need a closed loop of fences. Inside that loop, you must have the specific amount of empty space (Size) and the specific Terrain symbols drawn.
 
-**Important:** Squares containing Kiosks **do not** count toward enclosure size (as Kiosks are outside).
-
 ### The Savannah Zone
 | Animal | Size Needed | Terrain Requirements | Code | Appeal (VP) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -109,7 +106,6 @@ The game ends when a player has filled **10 Animals** OR the **Appeal Track** re
 
 ### 1. Positive Points (+)
 *   **Animals:** Sum of Appeal (VP) for all checked animals.
-*   **Kiosks:** **2 VP** per Kiosk placed on the map.
 *   **Coin Reserves:** **1 VP** per 3 Coins remaining.
 
 ### 2. Penalties (-)
@@ -121,6 +117,5 @@ The game ends when a player has filled **10 Animals** OR the **Appeal Track** re
 ---
 
 ## ⚡ Strategic Notes
-*   **Kiosk Blocking:** Since Kiosks must be outside, they are excellent for "filling gaps" between cages to maximize space, but be careful—if you surround an area with Kiosks, you might not be able to run a fence line through them later.
 *   **Shared Walls:** Using one line to separate a Lion and a Zebra is efficient (saves 1 action), but risky if you haven't drawn the terrain yet.
 *   **The Grass Trap:** Don't forget that Savannah animals specifically need **Grass** symbols. An empty square is just dirt! You must spend Landscape actions to grow the grass.
