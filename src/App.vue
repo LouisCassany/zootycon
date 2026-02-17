@@ -1,103 +1,110 @@
 <template>
   <!-- Main Sheet: A4 Landscape -->
   <div
-    class="w-[297mm] h-[210mm] p-6 flex flex-col gap-4 m-4 print:m-0 font-sans bg-emerald-50 shadow-2xl rounded-3xl overflow-hidden border-8 border-white">
+    class="w-[297mm] h-[210mm] p-6 flex flex-row gap-4 m-4 print:m-0 font-sans bg-emerald-50 shadow-2xl overflow-hidden">
 
-    <!-- SECTION HAUTE -->
-    <div class="flex justify-between gap-6 h-[135mm]">
-
-      <!-- COLONNE GAUCHE: Registre -->
-      <div class="w-[10.5cm] flex flex-col">
-        <h2
-          class="bg-indigo-800 text-white text-sm font-black px-4 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
-          <span class="text-lg">🐾</span> Registre des Empreintes
-        </h2>
-        <!-- Added overflow-hidden here to fix the bottom corner border issue -->
-        <div class="border-2 border-indigo-900 rounded-b-xl bg-white shadow-lg overflow-hidden">
-          <table class="w-full text-left text-[11px] border-collapse">
-            <thead class="bg-indigo-50 border-b-2 border-indigo-200 text-indigo-900">
-              <tr>
-                <th class="px-3 py-2 font-black uppercase">Animal</th>
-                <th class="px-1 text-center font-black">Taille</th>
-                <th class="px-1 font-black text-center">Besoins</th>
-                <th class="px-1 text-center font-black bg-rose-600 text-white w-10">PV</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(a, idx) in animals" :key="a.code"
-                :class="['border-b border-indigo-100 last:border-0', idx % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30']">
-                <td class="px-3 py-1.5 font-bold text-indigo-950 flex items-center gap-2">
-                  <span
-                    class="w-5 h-5 bg-indigo-900 text-white flex items-center justify-center rounded-md text-[9px] font-black italic">{{
-                      a.code }}</span>
-                  {{ a.name }}
-                </td>
-                <td class="text-center font-black text-indigo-600 text-xs">{{ a.size }}</td>
-                <td class="px-1 text-center">
-                  <div class="flex gap-0.5 justify-center">
-                    <GameSymbol v-for="(req, i) in a.reqs" :key="i" :name="req" size="w-6 h-6" class="drop-shadow-sm" />
-                  </div>
-                </td>
-                <td class="text-center font-black text-sm text-rose-600 bg-rose-50 border-l border-rose-100">{{
-                  a.vp
-                  }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <!-- COLONNE 1: Registre des Animaux -->
+    <div class="w-[100mm] flex flex-col h-full">
+      <h2
+        class="bg-indigo-800 text-white text-xs font-black px-3 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
+        <span class="text-base">🐾</span> Registre
+      </h2>
+      <div class="border-2 border-indigo-900 rounded-b-xl bg-white shadow-lg overflow-hidden flex-1">
+        <table class="w-full text-left text-[10px] border-collapse">
+          <thead class="bg-indigo-50 border-b-2 border-indigo-200 text-indigo-900">
+            <tr>
+              <th class="px-2 py-2 font-black uppercase">Animal</th>
+              <th class="px-1 text-center font-black">Taille</th>
+              <th class="px-1 font-black text-center">Besoins</th>
+              <th class="px-1 text-center font-black bg-rose-600 text-white w-8">PV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(a, idx) in animals" :key="a.code"
+              :class="['border-b border-indigo-100 last:border-0', idx % 2 === 0 ? 'bg-white' : 'bg-indigo-50/30']">
+              <td class="px-2 py-2 font-bold text-indigo-950 flex items-center gap-1.5">
+                <span
+                  class="w-5 h-5 bg-indigo-900 text-white flex items-center justify-center rounded-md text-[9px] font-black italic shrink-0">{{
+                    a.code }}</span>
+                <span class="truncate">{{ a.name }}</span>
+              </td>
+              <td class="text-center font-black text-indigo-600">{{ a.size }}</td>
+              <td class="px-1 text-center">
+                <div class="flex gap-0.5 justify-center flex-wrap">
+                  <GameSymbol v-for="(req, i) in a.reqs" :key="i" :name="req" size="w-8 h-8" class="drop-shadow-sm" />
+                </div>
+              </td>
+              <td class="text-center font-black text-rose-600 bg-rose-50 border-l border-rose-100">{{ a.vp }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    </div>
 
-      <!-- COLONNE DROITE : Grille de Zonage -->
-      <div class="w-[12cm] flex flex-col">
-        <h2
-          class="bg-emerald-700 text-white text-sm font-black px-4 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
-          <span class="text-lg">🗺️</span> Carte du Sanctuaire
-        </h2>
-
-        <div
-          class="grid grid-cols-10 grid-rows-10 border-4 border-emerald-900 bg-white h-full aspect-square shadow-inner rounded-b-xl">
-          <div v-for="i in 100" :key="i" class="border border-emerald-100/50 relative flex items-center justify-center">
-          </div>
+    <!-- COLONNE 2: Carte du Sanctuaire -->
+    <div class="w-[125mm] flex flex-col h-full">
+      <h2
+        class="bg-emerald-700 text-white text-sm font-black px-4 py-2 uppercase tracking-tighter italic rounded-t-xl shadow-md flex items-center gap-2">
+        <span class="text-lg">🗺️</span> Carte du Sanctuaire
+      </h2>
+      <div
+        class="grid grid-cols-10 grid-rows-10 border-4 border-emerald-900 bg-white aspect-square shadow-inner rounded-b-xl relative overflow-hidden">
+        <div v-for="i in 100" :key="i" class="border border-black/50 relative flex items-center justify-center">
         </div>
       </div>
     </div>
 
-    <!-- SECTION BASSE: Trackers -->
-    <div class="flex-1 flex flex-col">
-      <div
-        class="border-2 border-slate-900 rounded-2xl bg-white shadow-lg p-3 px-6 flex flex-col justify-around flex-1">
+    <!-- COLONNE 3: Trackers Verticaux -->
+    <div class="flex-1 flex flex-col h-full font-sans">
+      <!-- Header -->
+      <h2
+        class="bg-slate-900 text-white text-xs font-black px-4 py-2.5 uppercase tracking-widest italic rounded-t-xl shadow-md flex items-center gap-2 border-b border-slate-700">
+        ⚙️ Tableau de bord
+      </h2>
 
-        <!-- Track 1: Gold -->
-        <div class="flex items-center gap-4">
-          <div class="w-24 text-right">
-            <span class="text-[11px] font-black uppercase text-amber-700 block leading-none">Trésorerie</span>
-            <span class="text-[8px] font-bold text-amber-400 uppercase tracking-widest italic">Pièces d'or</span>
+      <!-- Main Board Area -->
+      <div class="border-x-2 border-b-4 border-slate-900 rounded-b-xl bg-slate-50 p-4 flex flex-row gap-6 flex-1">
+
+        <!-- Vertical Gold Track -->
+        <div class="flex flex-col items-center flex-1">
+          <div class="flex items-center gap-1 mb-2">
+            <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+            <span class="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Trésor</span>
           </div>
-          <div class="flex flex-1 border-2 border-amber-500 rounded-lg bg-white overflow-hidden h-9 shadow-inner">
-            <div v-for="n in 20" :key="n"
-              :class="['flex-1 border-r border-amber-100 flex items-center justify-center text-xs font-black last:border-r-0', n % 5 === 0 ? 'bg-amber-500 text-white' : 'text-amber-900']">
-              {{ n }}
+
+          <div
+            class="relative w-full h-full bg-amber-100 rounded-lg border-2 border-amber-900/20 shadow-inner flex flex-col overflow-hidden">
+            <div v-for="n in 20" :key="n" :class="[
+              'flex-1 flex items-center justify-center relative border-t border-amber-200/50 transition-colors',
+              n % 5 === 0 ? 'bg-amber-400/30' : ''
+            ]">
+              <!-- Regular Number -->
+              <span class="text-[10px] font-bold text-amber-900/60 tabular-nums">
+                {{ n }}
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Track 2: Reputation -->
-        <div class="flex items-center gap-4">
-          <div class="w-24 text-right">
-            <span class="text-[11px] font-black uppercase text-sky-700 block leading-none">Réputation</span>
-            <span class="text-[8px] font-bold text-sky-400 uppercase tracking-widest italic">Attrait</span>
+        <!-- Vertical Reputation Track -->
+        <div class="flex flex-col items-center flex-[2]">
+          <div class="flex items-center gap-1 mb-2">
+            <div class="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></div>
+            <span class="text-[10px] font-black text-sky-800 uppercase tracking-tighter">Réputation</span>
           </div>
-          <div class="flex flex-1 flex-col border-2 border-sky-500 rounded-lg bg-white overflow-hidden shadow-inner">
-            <div class="flex border-b border-sky-100">
-              <div v-for="n in 25" :key="n"
-                :class="['flex-1 h-5 border-r border-sky-50 flex items-center justify-center text-[10px] font-black last:border-r-0', n % 5 === 0 ? 'bg-sky-600 text-white' : 'text-sky-900']">
-                {{ n }}
-              </div>
-            </div>
-            <div class="flex">
-              <div v-for="n in 25" :key="n + 25"
-                :class="['flex-1 h-5 border-r border-sky-50 flex items-center justify-center text-[10px] font-black last:border-r-0', (n + 25) % 5 === 0 ? 'bg-sky-600 text-white' : 'text-sky-900']">
-                {{ n + 25 }}
+
+          <div class="flex w-full gap-2 h-full">
+            <!-- Two-column track for 1-50 -->
+            <div v-for="col in [0, 25]" :key="col"
+              class="flex flex-col flex-1 bg-sky-100 rounded-lg border-2 border-sky-900/20 shadow-inner overflow-hidden">
+
+              <div v-for="n in 25" :key="n + col" :class="[
+                'flex-1 flex items-center justify-center relative border-t border-sky-200/50',
+                (n + col) % 5 === 0 ? 'bg-sky-500/20' : ''
+              ]">
+                <span class="text-[9px] font-bold text-sky-900/50 tabular-nums">
+                  {{ n + col }}
+                </span>
               </div>
             </div>
           </div>
@@ -116,7 +123,7 @@ const animals = [
   { name: "Girafe", code: "G", size: 5, reqs: ["grass", "grass", "tree"], vp: 7 },
   { name: "Lion", code: "L", size: 6, reqs: ["rock", "rock", "water"], vp: 8 },
   { name: "Éléphant", code: "E", size: 8, reqs: ["water", "water", "water", "tree", "tree"], vp: 12 },
-  { name: "Flamant", code: "F", size: 3, reqs: ["water"], vp: 4 },
+  { name: "Flamant rose", code: "F", size: 3, reqs: ["water"], vp: 4 },
   { name: "Crocodile", code: "C", size: 5, reqs: ["water", "water", "water", "rock"], vp: 7 },
   { name: "Dauphin", code: "D", size: 7, reqs: ["water", "water", "water", "water", "water"], vp: 10 },
   { name: "Pingouin", code: "N", size: 2, reqs: ["rock", "water"], vp: 4 },
