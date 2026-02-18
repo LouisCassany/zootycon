@@ -6,7 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	_ "image/jpeg" // Support decoding JPEGs
+	_ "image/jpeg"
 	"image/png"
 	"math"
 	"os"
@@ -20,18 +20,17 @@ import (
 type Point struct{ X, Y int }
 
 func main() {
-	// 1. Define Flags
 	inputPtr := flag.String("i", "", "Input image path (Required)")
-	outputPtr := flag.String("o", "", "Output folder path (Required)")
+	outputPtr := flag.String("o", "", "Output path (File for single, Folder for split)")
 	sizePtr := flag.String("s", "", "Target size 'WIDTHxHEIGHT' (e.g. 300x300)")
 	tolerancePtr := flag.Int("t", 20, "Background color tolerance (0-255)")
-	minPtr := flag.Int("m", 10, "Minimum pixel size for icons")
-	singlePtr := flag.Bool("single", false, "Process as a single image (skip splitting into multiple icons)")
+	minPtr := flag.Int("m", 10, "Minimum pixel dimension for icons (width or height)")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Icon pack - Sprite Sheet Extractor\n\n")
-		fmt.Fprintf(os.Stderr, "USAGE:\n  iconpack -i sheet.png -o ./out -s 300x300\n")
-		fmt.Fprintf(os.Stderr, "  iconpack -i icon.png -o ./out -s 512x512 -single\n\n")
+		fmt.Fprintf(os.Stderr, "USAGE:\n")
+		fmt.Fprintf(os.Stderr, "  Split sheet:    iconpack -i sheet.png -o ./out_folder -s 256x256\n")
+		fmt.Fprintf(os.Stderr, "  Single image:   iconpack -i icon.png -o ./processed.png -s 512x512\n\n")
 		flag.PrintDefaults()
 	}
 
@@ -42,7 +41,9 @@ func main() {
 		return
 	}
 
-	// Load Image
+	outExt := filepath.Ext(*outputPtr)
+	isSingleMode := outExt != ""
+
 	file, err := os.Open(*inputPtr)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -58,34 +59,31 @@ func main() {
 
 	bounds := src.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
-
-	// Convert to mutable RGBA
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
 	draw.Draw(img, img.Bounds(), src, bounds.Min, draw.Src)
 
-	fmt.Println("Step 1: Removing background...")
+	fmt.Println("Step 1: Removing background and denoising...")
 	floodFillAlpha(img, *tolerancePtr)
 
-	os.MkdirAll(*outputPtr, 0755)
+	// NEW: Remove alpha noise (stray pixels with very low opacity)
+	denoise(img)
 
-	// --- SINGLE IMAGE MODE ---
-	if *singlePtr {
-		fmt.Println("Step 2: Processing as single image...")
+	if isSingleMode {
+		fmt.Printf("Step 2: Processing single image to '%s'...\n", *outputPtr)
+		os.MkdirAll(filepath.Dir(*outputPtr), 0755)
 		finalImg := image.Image(tightCrop(img))
-
 		if *sizePtr != "" {
 			tw, th := parseSize(*sizePtr)
 			finalImg = resizeAndCenter(finalImg.(*image.RGBA), tw, th)
 		}
-
-		outName := "output_single.png"
-		saveImage(filepath.Join(*outputPtr, outName), finalImg)
-		fmt.Printf("Finished! Saved single image to '%s'\n", *outputPtr)
+		saveImage(*outputPtr, finalImg)
+		fmt.Println("Finished!")
 		return
 	}
 
-	// --- SPRITE SHEET SPLITTING MODE ---
-	fmt.Println("Step 2: Splitting and cropping icons...")
+	fmt.Printf("Step 2: Splitting icons into folder '%s'...\n", *outputPtr)
+	os.MkdirAll(*outputPtr, 0755)
+
 	visited := make([]bool, w*h)
 	iconCount := 0
 
@@ -94,35 +92,32 @@ func main() {
 			idx := y*w + x
 			_, _, _, a := img.At(x, y).RGBA()
 
-			// If pixel is not transparent and not visited
-			if a > 0 && !visited[idx] {
+			// Start finding an island only if pixel is significantly visible
+			if a > 5000 && !visited[idx] {
 				points, minP, maxP := findIsland(img, x, y, visited)
 
 				iconW := (maxP.X - minP.X) + 1
 				iconH := (maxP.Y - minP.Y) + 1
 
-				if iconW < *minPtr || iconH < *minPtr {
+				// Strictly filter out small clumps
+				// If the total area is tiny OR both dimensions are smaller than min
+				if (iconW < *minPtr && iconH < *minPtr) || len(points) < (*minPtr*2) {
 					continue
 				}
 
-				// Initial crop of the island
 				tempImg := image.NewRGBA(image.Rect(0, 0, iconW, iconH))
 				for _, p := range points {
 					tempImg.Set(p.X-minP.X, p.Y-minP.Y, img.At(p.X, p.Y))
 				}
 
-				// TIGHT CROP: Remove any empty space around the island
 				tightImg := tightCrop(tempImg)
-
 				var finalImg image.Image = tightImg
 
-				// Resize and Center if requested
 				if *sizePtr != "" {
 					tw, th := parseSize(*sizePtr)
 					finalImg = resizeAndCenter(tightImg, tw, th)
 				}
 
-				// Save
 				outName := fmt.Sprintf("icon_%03d.png", iconCount)
 				saveImage(filepath.Join(*outputPtr, outName), finalImg)
 				fmt.Printf("  Saved %s (%dx%d raw)\n", outName, tightImg.Bounds().Dx(), tightImg.Bounds().Dy())
@@ -130,10 +125,22 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("\nFinished! Extracted %d icons to '%s'\n", iconCount, *outputPtr)
+	fmt.Printf("\nFinished! Extracted %d icons.\n", iconCount)
 }
 
-// floodFillAlpha turns the background (starting at 0,0) transparent
+// denoise removes very faint pixels that often cause "clumps"
+func denoise(img *image.RGBA) {
+	for i := 0; i < len(img.Pix); i += 4 {
+		// If alpha is less than ~5% (12/255), make it fully transparent
+		if img.Pix[i+3] < 12 {
+			img.Pix[i] = 0
+			img.Pix[i+1] = 0
+			img.Pix[i+2] = 0
+			img.Pix[i+3] = 0
+		}
+	}
+}
+
 func floodFillAlpha(img *image.RGBA, tolerance int) {
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -163,7 +170,6 @@ func floodFillAlpha(img *image.RGBA, tolerance int) {
 	}
 }
 
-// findIsland groups connected non-transparent pixels
 func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Point, Point, Point) {
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
@@ -202,8 +208,8 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 				if nx >= 0 && nx < w && ny >= 0 && ny < h {
 					idx := ny*w + nx
 					_, _, _, a := img.At(nx, ny).RGBA()
-					// Ignore pixels that are essentially transparent (noise)
-					if a > 1000 && !globalVisited[idx] {
+					// Threshold 5000 (~7% alpha) to ignore noise clumps
+					if a > 5000 && !globalVisited[idx] {
 						globalVisited[idx] = true
 						queue = append(queue, Point{nx, ny})
 					}
@@ -214,7 +220,6 @@ func findIsland(img *image.RGBA, startX, startY int, globalVisited []bool) ([]Po
 	return points, minP, maxP
 }
 
-// tightCrop trims fully transparent borders to maximize the icon size
 func tightCrop(img *image.RGBA) *image.RGBA {
 	bounds := img.Bounds()
 	minX, minY, maxX, maxY := bounds.Max.X, bounds.Max.Y, bounds.Min.X, bounds.Min.Y
@@ -223,7 +228,7 @@ func tightCrop(img *image.RGBA) *image.RGBA {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			_, _, _, a := img.At(x, y).RGBA()
-			if a > 0 {
+			if a > 5000 { // Match denoise threshold
 				hasPixels = true
 				if x < minX {
 					minX = x
@@ -247,27 +252,17 @@ func tightCrop(img *image.RGBA) *image.RGBA {
 
 	rect := image.Rect(minX, minY, maxX+1, maxY+1)
 	sub := img.SubImage(rect).(*image.RGBA)
-
-	// Normalize to 0,0
 	out := image.NewRGBA(image.Rect(0, 0, rect.Dx(), rect.Dy()))
 	draw.Draw(out, out.Bounds(), sub, rect.Min, draw.Src)
 	return out
 }
 
-// resizeAndCenter scales the icon to fit the box without stretching
 func resizeAndCenter(src *image.RGBA, tw, th int) image.Image {
-	// Fit maintaining aspect ratio (the icon will touch the edges of the box on at least 2 sides)
 	resized := imaging.Fit(src, tw, th, imaging.Lanczos)
-
-	// Create the final canvas
 	dst := image.NewRGBA(image.Rect(0, 0, tw, th))
-
-	// Calculate center position
 	bx := resized.Bounds()
 	startX := (tw - bx.Dx()) / 2
 	startY := (th - bx.Dy()) / 2
-
-	// Draw the resized image onto the center of the transparent canvas
 	draw.Draw(dst, image.Rect(startX, startY, startX+bx.Dx(), startY+bx.Dy()), resized, image.Point{0, 0}, draw.Src)
 	return dst
 }
